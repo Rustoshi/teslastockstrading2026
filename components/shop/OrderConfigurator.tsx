@@ -10,9 +10,9 @@ import { Upload, ChevronLeft, Copy, Check } from "lucide-react";
 export default function OrderConfigurator({ product, details, cryptoWallets = [], isDashboard = false }: { product: any; details: any; cryptoWallets?: any[]; isDashboard?: boolean }) {
     const router = useRouter();
 
-    // Fallback if details are missing variants
-    const variants = details?.variants || [
-        { name: "Standard", cashPrice: product.baseCashPrice, financePrice: Math.round(product.baseCashPrice / 72) }
+    // Fallback if details are missing variants or variants array is empty
+    const variants = (details?.variants && details.variants.length > 0) ? details.variants : [
+        { name: "Standard", cashPrice: product.baseCashPrice || 0, financePrice: Math.round((product.baseCashPrice || 0) / 72) }
     ];
 
     // ----- State Management -----
@@ -38,7 +38,7 @@ export default function OrderConfigurator({ product, details, cryptoWallets = []
     const [copied, setCopied] = useState(false);
 
     const selectedVariant = variants[selectedVariantIdx];
-    const amountDue = paymentMethod === "CASH" ? selectedVariant.cashPrice : (details?.minimumDownPayment || 4500);
+    const amountDue = paymentMethod === "CASH" ? (selectedVariant.cashPrice || 0) : (details?.minimumDownPayment || 4500);
     const activeCrypto = cryptoWallets.find((c: any) => c._id === selectedCryptoId) || cryptoWallets[0];
 
     // ----- Handlers -----
@@ -110,7 +110,7 @@ export default function OrderConfigurator({ product, details, cryptoWallets = []
                 body: JSON.stringify({
                     productId: product._id,
                     paymentType: paymentMethod,
-                    totalAmount: selectedVariant.cashPrice,
+                    totalAmount: selectedVariant.cashPrice || 0,
                     downPaymentAmount: paymentMethod === 'FINANCE' ? details?.minimumDownPayment || 4500 : null,
                     monthlyPayment: paymentMethod === 'FINANCE' ? selectedVariant.financePrice : null,
                     financeTermMonths: paymentMethod === 'FINANCE' ? 72 : null,
@@ -225,7 +225,7 @@ export default function OrderConfigurator({ product, details, cryptoWallets = []
                                                     {variant.name}
                                                 </span>
                                                 <span className={`text-sm font-medium ${textMuted}`}>
-                                                    ${variant.cashPrice.toLocaleString()}
+                                                    ${(variant.cashPrice || 0).toLocaleString()}
                                                 </span>
                                             </button>
                                         ))}
@@ -257,13 +257,13 @@ export default function OrderConfigurator({ product, details, cryptoWallets = []
                                         {paymentMethod === "CASH" ? (
                                             <div className="flex justify-between items-center">
                                                 <span className={`text-sm font-semibold ${isDashboard ? 'text-white/80' : 'text-black/70'}`}>Vehicle Price</span>
-                                                <span className="text-xl font-bold">${selectedVariant.cashPrice.toLocaleString()}</span>
+                                                <span className="text-xl font-bold">${(selectedVariant.cashPrice || 0).toLocaleString()}</span>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col gap-3">
                                                 <div className="flex justify-between items-center">
                                                     <span className={`text-sm font-semibold ${isDashboard ? 'text-white/80' : 'text-black/70'}`}>Est. Monthly</span>
-                                                    <span className="text-xl font-bold">${selectedVariant.financePrice.toLocaleString()} <span className={`text-sm font-medium ${textSub}`}>/mo</span></span>
+                                                    <span className="text-xl font-bold">${(selectedVariant.financePrice || 0).toLocaleString()} <span className={`text-sm font-medium ${textSub}`}>/mo</span></span>
                                                 </div>
                                                 <div className={`flex justify-between items-center border-t pt-3 mt-1 ${borderMuted}`}>
                                                     <span className={`text-xs font-medium ${textMuted}`}>Down Payment</span>
